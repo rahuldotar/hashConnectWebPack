@@ -1,8 +1,7 @@
-const hashConnect = new window.HashConnect(true);
+const hashconnect = new window.HashConnect(true);
 const { TransferTransaction,Hbar } = window.hashgraph
 
 const connectHashGraph = async () => {
-    const hashconnect = new HashConnect()
 
     const appMetadata = {
         name: "dApp Example",
