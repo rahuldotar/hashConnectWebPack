@@ -2,37 +2,42 @@ const hashConnect = new window.HashConnect(true);
 const { TransferTransaction,Hbar } = window.hashgraph
 
 const connectHashGraph = async () => {
-    console.log({hashConnect})
+    const hashconnect = new HashConnect()
+
     const appMetadata = {
         name: "dApp Example",
         description: "An example hedera dApp",
         icon: "https://absolute.url/to/icon.png",
         url:"http://127.0.0.1:5555/"
     }
-    let initData = await hashConnect.init(appMetadata, "testnet", false);
+    
+
+    const initData = await hashconnect.init(appMetadata, "testnet", false);
     console.log({initData})
 
-    const connection = await hashConnect.connect(initData.topic, appMetadata);
-    console.log({connection})
-    
-    const accountId = "0.0.48966911"
-    const otherAccountId = "0.0.48609370"
+  
+    await hashconnect.findLocalWallets()
 
-    const pairingString = await hashConnect.generatePairingString(connection,'testnet',false)
-    console.log({pairingString})
+    hashconnect.foundExtensionEvent.once(async(walletMetadata) => {
+      console.log({walletMetadata})
 
-    await hashConnect.findLocalWallets()
-    await hashConnect.connectToLocalWallet(pairingString)
+      const approved = await hashconnect.connectToLocalWallet(initData.pairingString,walletMetadata)
+      console.log({approved})
+  })
 
-    hashConnect.connectionStatusChangeEvent.once(async (connectionStatus) => {
-        console.log({connectionStatus})
-        const provider = await hashConnect.getProvider("testnet", initData.topic,accountId );
+    hashconnect.pairingEvent.once(async (pairingData) => {
+        console.log({pairingData})
+
+        const accountId = pairingData.accountIds[0]
+        const otherAccountId = "0.0.48609370"
+
+        const provider = await hashconnect.getProvider("testnet", initData.topic,pairingData.accountIds[0] );
         console.log({provider})
 
         const balance = (await provider.getAccountBalance(accountId)).toString();
         console.log({balance})
 
-        const signer = await hashConnect.getSigner(provider);
+        const signer = await hashconnect.getSigner(provider);
         console.log({signer})
 
         const transaction = await new TransferTransaction()
@@ -46,6 +51,13 @@ const connectHashGraph = async () => {
         console.log({res})
     })
 
+    hashconnect.acknowledgeMessageEvent.once((acknowledgeData) => {
+      console.log({acknowledgeData})
+  })
+
+  hashconnect.connectionStatusChangeEvent.once((connectionStatus) => {
+      console.log({connectionStatus})
+  })
     
 }
 
